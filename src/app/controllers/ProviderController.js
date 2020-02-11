@@ -7,11 +7,15 @@ class ProviderController {
       where: { provider: true },
       attributes: ['id', 'name', 'email', 'avatar_id'],
       include: [
-        { model: File, as: 'avatar', attributes: ['name', 'path', 'url'] },
+        {
+          model: File,
+          as: 'avatar',
+          attributes: ['name', 'path', 'url', 'url_mobile'],
+        },
       ],
     });
 
-    return res.json({ providers });
+    return res.json(providers);
   }
 }
 
