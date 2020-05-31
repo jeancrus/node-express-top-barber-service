@@ -19,6 +19,14 @@ class UserController {
     if (userExists) {
       return res.status(400).json({ error: 'User already exists.' });
     }
+
+    if (req.body.admin || req.body.provider || req.body.receptionist) {
+      return res.status(400).json({
+        error:
+          'User admin, provider or receptionist cannot be created withou admin user previlege.',
+      });
+    }
+
     const { id, name, email } = await User.create(req.body);
 
     return res.json({ id, name, email });

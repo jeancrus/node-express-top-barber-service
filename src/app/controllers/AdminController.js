@@ -1,13 +1,29 @@
 import User from '../models/User';
 import File from '../models/File';
+import * as Yup from 'yup';
 
 class AdminController {
   async index(req, res) {
     try {
+      const { page = 1 } = req.query;
       const user = await User.findByPk(req.userId);
-      const admins = await User.findAll({
-        where: { admin: true },
-        attributes: ['id', 'name', 'email', 'avatar_id'],
+      if (!(user.admin || user.receptionist))
+        return res.status(400).json({
+          error: 'Only admin or receptionist user can see all the users!',
+        });
+      const allUsers = await User.findAll({
+        attributes: [
+          'id',
+          'name',
+          'email',
+          'avatar_id',
+          'provider',
+          'admin',
+          'receptionist',
+        ],
+        order: ['id'],
+        limit: 20,
+        offset: (page - 1) * 20,
         include: [
           {
             model: File,
@@ -17,7 +33,7 @@ class AdminController {
         ],
       });
 
-      return res.json(admins);
+      return res.json(allUsers);
     } catch (error) {}
   }
 
@@ -29,7 +45,14 @@ class AdminController {
     });
 
     const user = await User.findByPk(req.userId);
-    console.log('AdminController -> store -> user', user);
+
+    if (req.body.admin || req.body.provider || req.body.receptionist) {
+      if (!user.admin)
+        return res.status(400).json({
+          error:
+            'User admin, provider or receptionist cannot be created without admin user previlege.',
+        });
+    }
 
     if (!(await schema.isValid(req.body))) {
       return res.status(400).json({ error: 'Validation fails' });
