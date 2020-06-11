@@ -153,7 +153,7 @@ class AppointmentController {
         .json({ error: 'You dont have permission to cancel this appointment' });
     }
 
-    if (await isValid(appointment.canceled_at)) {
+    if (isValid(appointment.canceled_at)) {
       return res
         .status(401)
         .json({ error: 'This appointment is already canceled' });

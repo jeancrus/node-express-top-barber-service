@@ -42,8 +42,14 @@ routes.put('/notifications/:id', NotificationController.update);
 
 routes.post('/files', upload.single('file'), FileController.store);
 
+routes.get('/admins', AdminController.index);
+
 routes.post('/admin', AdminController.store);
 
-routes.get('/admins', AdminController.index);
+routes.put('/admin', AdminController.update);
+
+routes.delete('/admin/:id', AdminController.delete);
+
+routes.get('/admin/:id', AdminController.show);
 
 export default routes;
