@@ -78,11 +78,7 @@ class AdminController {
     const schema = Yup.object().shape({
       name: Yup.string(),
       email: Yup.string().email(),
-      password: Yup.string()
-        .min(6)
-        .when('oldPassword', (oldPassword, field) =>
-          oldPassword ? field.required() : field
-        ),
+      password: Yup.string().min(6),
       provider: Yup.boolean(),
       admin: Yup.boolean(),
       receptionist: Yup.boolean(),
@@ -102,6 +98,11 @@ class AdminController {
     const { email } = req.body;
 
     const user = await User.findByPk(req.params.id);
+
+    if (isAdmin.id === user.id)
+      return res
+        .status(400)
+        .json({ error: 'Não pode alterar o próprio usuário!' });
 
     if (!user) {
       return res.status(400).json({ error: 'Usuário não existe!' });
