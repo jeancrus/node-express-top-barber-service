@@ -140,18 +140,6 @@ class ReceptionistController {
         .json({ error: 'Usuário não tem permissão para acesso' });
     }
 
-    const allProviders = await User.findAll({
-      where: {
-        provider: true,
-      },
-    });
-
-    const users = await User.findAll({
-      where: {
-        provider: false,
-      },
-    });
-
     const parsedDate =
       req.params.date === 'all' ? 'all' : parseISO(req.params.date);
     let appointments;

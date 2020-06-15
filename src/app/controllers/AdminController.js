@@ -5,7 +5,7 @@ import File from '../models/File';
 class AdminController {
   async index(req, res) {
     try {
-      const { page = 1 } = req.query;
+      // const { page = 1 } = req.query;
       const user = await User.findByPk(req.userId);
       if (!(user.admin || user.receptionist))
         return res.status(400).json({
