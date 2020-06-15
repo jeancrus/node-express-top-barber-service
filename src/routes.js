@@ -12,6 +12,7 @@ import ScheduleController from './app/controllers/ScheduleController';
 import NotificationController from './app/controllers/NotificationController';
 import AvailableController from './app/controllers/AvailableController';
 import AdminController from './app/controllers/AdminController';
+import ReceptionistController from './app/controllers/ReceptionistController';
 
 const routes = new Router();
 const upload = multer(multerConfig);
@@ -46,10 +47,18 @@ routes.get('/admins', AdminController.index);
 
 routes.post('/admin', AdminController.store);
 
-routes.put('/admin', AdminController.update);
+routes.put('/admin/:id', AdminController.update);
 
 routes.delete('/admin/:id', AdminController.delete);
 
 routes.get('/admin/:id', AdminController.show);
+
+routes.get('/receptionist/schedules', ReceptionistController.index);
+
+routes.post('/receptionist/schedules', ReceptionistController.store);
+
+routes.get('/receptionist/schedules/:date', ReceptionistController.show);
+
+routes.delete('/receptionist/schedules/:id', ReceptionistController.delete);
 
 export default routes;

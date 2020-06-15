@@ -23,7 +23,7 @@ class UserController {
     if (req.body.admin || req.body.provider || req.body.receptionist) {
       return res.status(400).json({
         error:
-          'User admin, provider or receptionist cannot be created withou admin user previlege.',
+          'User admin, provider or receptionist cannot be created without admin user previlege.',
       });
     }
 

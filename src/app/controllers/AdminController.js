@@ -1,6 +1,6 @@
+import * as Yup from 'yup';
 import User from '../models/User';
 import File from '../models/File';
-import * as Yup from 'yup';
 
 class AdminController {
   async index(req, res) {
@@ -9,7 +9,8 @@ class AdminController {
       const user = await User.findByPk(req.userId);
       if (!(user.admin || user.receptionist))
         return res.status(400).json({
-          error: 'Only admin or receptionist user can see all the users!',
+          error:
+            'Somente usuários do tipo administrador ou recepcionistra podem ver a listagem!',
         });
       const allUsers = await User.findAll({
         attributes: [
@@ -22,8 +23,8 @@ class AdminController {
           'receptionist',
         ],
         order: ['id'],
-        limit: 20,
-        offset: (page - 1) * 20,
+        // limit: 20,
+        // offset: (page - 1) * 20,
         include: [
           {
             model: File,
@@ -34,7 +35,11 @@ class AdminController {
       });
 
       return res.json(allUsers);
-    } catch (error) {}
+    } catch (error) {
+      return res.status(500).json({
+        error,
+      });
+    }
   }
 
   async store(req, res) {
@@ -50,18 +55,18 @@ class AdminController {
       if (!user.admin)
         return res.status(400).json({
           error:
-            'User admin, provider or receptionist cannot be created without admin user previlege.',
+            'Uusuário do tipo administrador, recepcionista ou barbeiro não podem ser criados sem permissão.',
         });
     }
 
     if (!(await schema.isValid(req.body))) {
-      return res.status(400).json({ error: 'Validation fails' });
+      return res.status(400).json({ error: 'Falha de validação' });
     }
 
     const userExists = await User.findOne({ where: { email: req.body.email } });
 
     if (userExists) {
-      return res.status(400).json({ error: 'User already exists.' });
+      return res.status(400).json({ error: 'Usuário já existe.' });
     }
 
     const { id, name, email } = await User.create(req.body);
@@ -71,34 +76,36 @@ class AdminController {
 
   async update(req, res) {
     const schema = Yup.object().shape({
-      id: Yup.number().required(),
       name: Yup.string(),
       email: Yup.string().email(),
-      oldPassword: Yup.string().min(6),
       password: Yup.string()
         .min(6)
         .when('oldPassword', (oldPassword, field) =>
           oldPassword ? field.required() : field
         ),
-      confirmPassword: Yup.string().when('password', (password, field) =>
-        password ? field.required().oneOf([Yup.ref('password')]) : field
-      ),
+      provider: Yup.boolean(),
+      admin: Yup.boolean(),
+      receptionist: Yup.boolean(),
     });
 
     const isAdmin = await User.findByPk(req.userId);
 
     if (!isAdmin.admin)
       return res.status(400).json({
-        error: 'Only admin can change other users data!',
+        error: 'Somente administrador pode alterar dados de outros usuários!',
       });
 
     if (!(await schema.isValid(req.body))) {
-      return res.status(400).json({ error: 'Validation fails' });
+      return res.status(400).json({ error: 'Falha na validação.' });
     }
 
-    const { email, oldPassword, id } = req.body;
+    const { email } = req.body;
 
-    const user = await User.findByPk(id);
+    const user = await User.findByPk(req.params.id);
+
+    if (!user) {
+      return res.status(400).json({ error: 'Usuário não existe!' });
+    }
 
     if (email !== user.email) {
       const userExists = await User.findOne({
@@ -106,17 +113,13 @@ class AdminController {
       });
 
       if (userExists) {
-        return res.status(400).json({ error: 'User already exists.' });
+        return res.status(400).json({ error: 'Usuário já existe!' });
       }
-    }
-
-    if (oldPassword && !(await user.checkPassword(oldPassword))) {
-      return res.status(401).json({ error: 'Password does not match' });
     }
 
     await user.update(req.body);
 
-    const { name, avatar } = await User.findByPk(id, {
+    const { name, avatar } = await User.findByPk(req.params.id, {
       include: [
         {
           model: File,
@@ -126,7 +129,7 @@ class AdminController {
       ],
     });
 
-    return res.json({ id, name, email, avatar });
+    return res.json({ id: req.params.id, name, email, avatar });
   }
 
   async delete(req, res) {
@@ -134,17 +137,17 @@ class AdminController {
       const isAdmin = await User.findByPk(req.userId);
 
       if (!isAdmin.admin)
-        return res
-          .status(400)
-          .json({ error: 'Must be a admin to delete a user' });
+        return res.status(400).json({
+          error: 'Somente perfil de administrador para deletar usuários!',
+        });
       if (isAdmin.id === Number(req.params.id, 10))
         return res
           .status(400)
-          .json({ error: 'You cant delete your own user.' });
+          .json({ error: 'Você não pode deletar seu próprio usuário.' });
       const userExist = await User.findByPk(Number(req.params.id, 10));
 
       if (!userExist)
-        return res.status(400).json({ error: 'User doesnt exists.' });
+        return res.status(400).json({ error: 'Usuário não existe.' });
 
       await User.destroy({
         where: {
@@ -152,9 +155,9 @@ class AdminController {
         },
       });
 
-      return res.json(`User ${userExist.name} deleted sucessfully!`);
+      return res.json(`Usuário ${userExist.name} deletado com sucesso!`);
     } catch (error) {
-      return res.status(401).json({ error: 'Error on delete!' });
+      return res.status(401).json({ error: 'Ops...erro ao deletar!' });
     }
   }
 
@@ -164,16 +167,16 @@ class AdminController {
 
       if (!(user.receptionist || user.admin))
         return res.status(401).json({
-          error: 'User must be admin or receptionist to see the listed user',
+          error: 'Necessário usuário do tipo adminstrador ou recepcionista.',
         });
 
       const userExist = await User.findByPk(Number(req.params.id, 10));
 
       if (!userExist)
-        return res.status(400).json({ error: 'User doesnt exists.' });
+        return res.status(400).json({ error: 'User não existe.' });
 
-      const { id, name, email } = userExist;
-      return res.json({ id, name, email });
+      const { id, name, email, provider, admin, receptionist } = userExist;
+      return res.json({ id, name, email, provider, admin, receptionist });
     } catch (error) {
       return res.status(401).json({ error: 'Error on show!' });
     }

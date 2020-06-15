@@ -52,7 +52,7 @@ class AppointmentController {
       date: Yup.date().required(),
     });
     if (!(await schema.isValid(req.body))) {
-      return res.status(400).json({ error: 'Validatin fails' });
+      return res.status(400).json({ error: 'Dados inválidos' });
     }
     const { provider_id, date } = req.body;
 
@@ -63,7 +63,7 @@ class AppointmentController {
     if (req.userId === provider_id) {
       return res
         .status(401)
-        .json({ error: 'You cant create an appointment with yourself' });
+        .json({ error: 'Você não pode cadastrar para você mesmo!' });
     }
 
     const isProvider = await User.findOne({
@@ -76,7 +76,7 @@ class AppointmentController {
     if (!isProvider) {
       return res
         .status(401)
-        .json({ error: 'You can only create appointments with providers' });
+        .json({ error: 'Você pode somente marcar com barbeiros!' });
     }
 
     /**
@@ -85,7 +85,9 @@ class AppointmentController {
     const hourStart = startOfHour(parseISO(date));
 
     if (isBefore(hourStart, new Date())) {
-      return res.status(400).json({ error: 'Past dates are not permitted' });
+      return res
+        .status(400)
+        .json({ error: 'Datas no passado não são permitidas' });
     }
 
     /**
