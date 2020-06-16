@@ -11,13 +11,13 @@ class UserController {
     });
 
     if (!(await schema.isValid(req.body))) {
-      return res.status(400).json({ error: 'Validation fails' });
+      return res.status(400).json({ error: 'Campo inválido' });
     }
 
     const userExists = await User.findOne({ where: { email: req.body.email } });
 
     if (userExists) {
-      return res.status(400).json({ error: 'User already exists.' });
+      return res.status(400).json({ error: 'Usuário já existente.' });
     }
 
     if (req.body.admin || req.body.provider || req.body.receptionist) {
@@ -48,7 +48,7 @@ class UserController {
     });
 
     if (!(await schema.isValid(req.body))) {
-      return res.status(400).json({ error: 'Validation fails' });
+      return res.status(400).json({ error: 'Campo inválido.' });
     }
 
     const { email, oldPassword } = req.body;

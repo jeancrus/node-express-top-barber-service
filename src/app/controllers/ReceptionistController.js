@@ -155,6 +155,11 @@ class ReceptionistController {
             as: 'user',
             attributes: ['name'],
           },
+          {
+            model: User,
+            as: 'provider',
+            attributes: ['name'],
+          },
         ],
         order: ['date'],
       });
